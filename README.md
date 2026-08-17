@@ -89,9 +89,16 @@ Substantially more than a transcription:
 - `PI`, `KB` and `NA` corrected to double precision; they were single, which capped the
   whole calculation at about seven digits.
 
-Measured against the Fortran: 14142 beads solve in 16 minutes on 64 threads where the
-original was single-threaded, and the memory model is what makes models that size possible
-at all.
+Measured, on the same inputs and the same machine:
+
+| | Fortran GRPY | this program |
+|---|---|---|
+| 5169 beads | ~30 min (single-threaded) | 53 s (64 threads) |
+| 14142 beads (11N = 155562) | not attempted | 16 min (64 threads), 90 GB double / 45 GB single |
+
+Threading accounts for much of the first row — this program at 1200 beads runs 67.1 s on
+one thread against 2.81 s on 32 — and the memory model is what puts the second row within
+reach at all.
 
 ### Citing
 
