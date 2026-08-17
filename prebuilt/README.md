@@ -8,9 +8,20 @@ worst relative error 0.00e+00.
 |---|---|---|
 | `GRPY_osx10.11` | macOS universal (x86_64 + arm64) | ad-hoc signed; deployment target 10.13 (x86_64) / 11.0 (arm64) |
 | `GRPY_linux64` | Linux x86_64 | `-static-libstdc++ -static-libgcc`, so it needs only glibc |
+| `GRPY_win64.exe` | Windows x86_64 | cross-compiled, fully static, **not yet run on Windows** — see below |
 
 The names are the ones SOMO looks for in the UltraScan `bin` directory, so these drop
 straight into `us_somo/add_to_bin/`.
+
+## The Windows binary has not been run
+
+It was cross-compiled with mingw-w64 (GCC 16.2) and linked `-static`, and its import table
+lists only `KERNEL32.dll` and the UCRT `api-ms-win-crt-*` stubs -- no `libstdc++-6.dll`,
+`libwinpthread-1.dll` or `libgcc_s_seh-1.dll` -- so it needs no runtime DLLs on Windows
+10 or later. That is as far as static checking goes. It has NOT been executed: there was no
+Windows machine and no wine available where it was built, so unlike the other two it does
+not come with a golden-test result. **Smoke-test it against `tests/golden/` on Windows
+before shipping it.**
 
 ## Signing
 
