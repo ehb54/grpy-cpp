@@ -9,18 +9,6 @@ banner, same report. `tests/run.sh` compares its output against the golden outpu
 Fortran program on every example, and the physical values agree exactly at the reported
 precision.
 
-## Why this exists separately
-
-GRPY is **GPLv3**. UltraScan/SOMO, which calls it, is **LGPLv3**. A translation is a
-derivative work, so the translated code cannot be redistributed under LGPLv3 — and
-compiling it into `libus_somo` would do exactly that. Keeping it here, as its own GPLv3
-program that SOMO *invokes* rather than *links*, is what keeps the two licences apart.
-That is also the arrangement SOMO shipped for years with the Fortran binary.
-
-The parts that are **not** derived from `GRPY.f` — the tiled solver, the thread pool, the
-solvent-exposure shell reduction — are original work and stay with UltraScan under its own
-licence. Only the translated compute path, report writer and input readers live here.
-
 ## Building
 
 Eigen (header-only) is the only dependency.
