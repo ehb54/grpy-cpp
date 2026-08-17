@@ -7,17 +7,16 @@ worst relative error 0.00e+00.
 | file | platform | notes |
 |---|---|---|
 | `GRPY_osx10.11` | macOS universal (x86_64 + arm64) | ad-hoc signed; deployment target 10.13 (x86_64) / 11.0 (arm64) |
-| `GRPY_linux64` | Linux x86_64 | `-static-libstdc++ -static-libgcc`; needs only glibc >= 2.25, and imports no GLIBCXX/CXXABI symbols at all |
+| `GRPY_linux64` | Linux x86_64 | **fully static** (`-static`) -- no runtime dependencies at all, like the Fortran binary it replaces |
 | `GRPY_win64.exe` | Windows x86_64 | cross-compiled, fully static, **not yet run on Windows** — see below |
 
 The names are the ones SOMO looks for in the UltraScan `bin` directory, so these drop
 straight into `us_somo/add_to_bin/`.
 
-Note on the Linux binary: the Fortran `GRPY_linux64` it replaces was linked fully static,
-which this one cannot be -- the build host has no `glibc-static` and installing it needs
-root. Measured instead of assumed: the highest versioned symbol it requires is GLIBC_2.25,
-so it runs on anything from RHEL 8 / Ubuntu 18.04 forward. Only a distro older than that
-loses out relative to the fully static original.
+The Linux binary is fully static, matching the portability of the Fortran binary it
+replaces: `ldd` reports "not a dynamic executable", so no glibc version floor applies. That
+this still threads was checked rather than assumed -- `-static` can quietly cost you
+pthreads -- at 1200 beads it runs 67.1 s on one thread and 2.81 s on 32.
 
 ## The Windows binary has not been run
 
