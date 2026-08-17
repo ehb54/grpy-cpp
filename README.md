@@ -59,14 +59,51 @@ The `30–90% INVERTING MATRICES` progress is emitted by the blocked factorizati
 rather than from inside a bundled LAPACK, so the percentages differ from the original's.
 A caller scraping `^\s*(\d+)%\s*TASK:` for a progress bar sees the same shape.
 
-## Provenance and licence
+## Provenance, authorship and licence
 
-GRPY — Copyright © 2017 Paweł Jan Żuk — GPLv3. Cite: Żuk, P. J., Cichocki, B. and
-Szymczak, P., *GRPY: an accurate bead method for calculation of hydrodynamic properties of
-rigid biomacromolecules*, Biophys. J. **115**:782–800 (2018).
+This is a derivative work with two layers of authorship.
 
-This program is distributed under the GPLv3; see `LICENSE`. Each header records what it
-was translated from.
+- **GRPY** — Copyright © 2017 Paweł Jan Żuk — GPLv3. The Rotne–Prager–Yamakawa method, the
+  compute path, the report and the input formats originate in `GRPY.f`.
+- **The C++ port and everything built on it** — Copyright © 2026 the UltraScan project.
+
+Copyright in the original work remains with its author; copyright in the new material is
+the UltraScan project's. The combined work is GPLv3, as a derivative of GPLv3 code must
+be — see `LICENSE`. Each file records which layer it belongs to and, where it derives from
+`GRPY.f`, what was changed and when, as GPLv3 §5(a) requires.
+
+### What is new here
+
+Substantially more than a transcription:
+
+- the dense inverse replaced by a **tiled, in-place Cholesky** solved against only the 11
+  right-hand sides the rigid-body reduction needs, so the full inverse is never formed and
+  only the upper triangle is stored — the memory wall this port exists to move;
+- **thread-parallel** assembly and factorization over an injected pool;
+- **single precision** storage and factorization, halving memory again at no cost to the
+  reported figures;
+- **out-of-core** storage, bounding resident memory independently of model size;
+- fine-grained **progress** from inside the factorization;
+- errors **reported** — by field and line for input, with a non-zero exit for failures —
+  where the original aborted or computed on zeros;
+- `PI`, `KB` and `NA` corrected to double precision; they were single, which capped the
+  whole calculation at about seven digits.
+
+Measured against the Fortran: 14142 beads solve in 16 minutes on 64 threads where the
+original was single-threaded, and the memory model is what makes models that size possible
+at all.
+
+### Citing
+
+Two things are worth citing separately.
+
+**The method** is Żuk's, and any work using this program rests on it: Żuk, P. J., Cichocki,
+B. and Szymczak, P., *GRPY: an accurate bead method for calculation of hydrodynamic
+properties of rigid biomacromolecules*, Biophys. J. **115**:782–800 (2018).
+
+**This implementation** — the memory-lean tiled solver and its parallelization — is the
+subject of a paper in preparation by Brookes, Żuk and Rocco. This note will be replaced by
+the reference when it appears.
 
 ## Coding standards
 

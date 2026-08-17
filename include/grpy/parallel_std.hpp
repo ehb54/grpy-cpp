@@ -1,5 +1,7 @@
-// std::thread backend for la::Parallel -- used by the standalone CLI so it threads
-// without pulling in Qt. (SOMO's in-process build uses parallel_qt.hpp instead.)
+// std::thread backend for la::Parallel, used by the GRPY program.
+//
+// Copyright (C) 2026 the UltraScan project. Original work -- nothing here is translated
+// from GRPY.f -- distributed under the GPLv3 as part of this program. See LICENSE.
 #pragma once
 #include <atomic>
 #include <thread>

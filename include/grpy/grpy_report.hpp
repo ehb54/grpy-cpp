@@ -1,6 +1,27 @@
-// GRPY report writer -- shared by the CLI and the in-process API so both emit the
-// EXACT same report text (byte-identical to the Fortran GRPY, validated vs golden).
-// Pure formatting + the physical-scalar display formulas; no I/O, no SOMO deps.
+// GRPY report writer. Emits the report byte-identically to the Fortran GRPY, validated
+// against its golden output. Pure formatting and the display formulas; no I/O.
+//
+// ---------------------------------------------------------------------------------------
+// PROVENANCE AND COPYRIGHT
+//
+//   GRPY -- Copyright (C) 2017 Pawel Jan Zuk
+//   "This library is free software; you can redistribute it and/or modify it under the
+//    terms of the GNU General Public License version 3" (GRPY.f header)
+//
+//   C++ port and extensions -- Copyright (C) 2026 the UltraScan project
+//
+// MODIFIED FROM GRPY.f IN 2026 (GPLv3 section 5a):
+//   * WRITESTDOUT/WRITEFILE translated to a single writer taking an ostream, so the
+//     report and the report file cannot drift apart;
+//   * an extended-precision mode (ES24.15E3, GRPY_HP) for numerical validation.
+//
+// Copyright in the original work remains with its author; copyright in the new material
+// is the UltraScan project's. The combined work is GPLv3, as a derivative work must be.
+//
+// Cite: Zuk, P. J., Cichocki, B. and Szymczak, P., "GRPY: an accurate bead method for
+// calculation of hydrodynamic properties of rigid biomacromolecules", Biophys. J.
+// 115:782-800 (2018).
+// ---------------------------------------------------------------------------------------
 #pragma once
 #include <cmath>
 #include <cstdio>

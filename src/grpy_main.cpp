@@ -3,17 +3,26 @@
 // ---------------------------------------------------------------------------------------
 // PROVENANCE AND COPYRIGHT
 //
-// This program reproduces the command line, the progress banner and the report of GRPY.f:
-//
 //   GRPY -- Copyright (C) 2017 Pawel Jan Zuk
 //   "This library is free software; you can redistribute it and/or modify it under the
 //    terms of the GNU General Public License version 3" (GRPY.f header)
 //
+//   C++ port and extensions -- Copyright (C) 2026 the UltraScan project
+//
+// MODIFIED FROM GRPY.f IN 2026 (GPLv3 section 5a):
+//   * the command line, the progress banner and the report reproduced as the original's,
+//     so this program is a drop-in replacement for it;
+//   * thread count, single precision, out-of-core and extended-precision reporting added
+//     as environment variables, leaving the published command line untouched;
+//   * failures reported on stderr with a non-zero exit, where the original aborted or
+//     produced zeros.
+//
+// Copyright in the original work remains with its author; copyright in the new material
+// is the UltraScan project's. The combined work is GPLv3, as a derivative work must be.
+//
 // Cite: Zuk, P. J., Cichocki, B. and Szymczak, P., "GRPY: an accurate bead method for
 // calculation of hydrodynamic properties of rigid biomacromolecules", Biophys. J.
 // 115:782-800 (2018).
-//
-// This file, like the rest of this repository, is distributed under the GPLv3. See LICENSE.
 // ---------------------------------------------------------------------------------------
 //
 // The four invocations are those of the original, and the output is compared byte for byte

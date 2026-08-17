@@ -9,6 +9,9 @@
 // fine-grained progress per block-column -- the two things the SOMO integration needs.
 //
 // Storage: A = U^T U (U upper). Tiles A(i,j) for 0<=i<=j<nt, packed by column.
+//
+// Copyright (C) 2026 the UltraScan project. Original work -- nothing here is translated
+// from GRPY.f -- distributed under the GPLv3 as part of this program. See LICENSE.
 #pragma once
 #include <Eigen/Dense>
 #include <algorithm>
@@ -20,9 +23,18 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#if defined( _WIN32 )
+// Windows has no mmap. The out-of-core path -- a cluster-scale knob for matrices larger
+// than RAM -- is therefore unavailable there and says so at the point of use. Win32 does
+// offer CreateFileMapping/MapViewOfFile, but that code could not be exercised on any
+// machine available here, and an untested memory mapping under the factorization is worse
+// than a clear refusal. The in-core path, which is the default and what every ordinary run
+// uses, is unaffected.
+#else
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#endif
 
 namespace la {
 
@@ -154,6 +166,10 @@ struct TiledUpperSPD {
                           "single precision or out-of-core in the GRPY options." );
          }
       } else {
+#if defined( _WIN32 )
+         throw Error( "GRPY: out-of-core operation is not available on this platform."
+                      " Use single precision, or a smaller model." );
+#else
          path = file; unlink_on_close = true;
          mapbytes = nelem * sizeof( S );
          fd = ::open( file.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0600 );
@@ -177,11 +193,22 @@ struct TiledUpperSPD {
             throw Error( "GRPY: cannot map the out-of-core file '" + file + "': " + e );
          }
          data = static_cast<S*>( p );
+#endif
       }
    }
    ~TiledUpperSPD() {
-      if ( fd >= 0 ) { ::munmap( data, mapbytes ); ::close( fd ); if ( unlink_on_close ) ::unlink( path.c_str() ); }
-      else ::free( data );
+#if !defined( _WIN32 )
+      if ( fd >= 0 ) {
+         ::munmap( data, mapbytes );
+         ::close( fd );
+         if ( unlink_on_close ) {
+            ::unlink( path.c_str() );
+         }
+      } else
+#endif
+      {
+         ::free( data );
+      }
    }
    TiledUpperSPD( const TiledUpperSPD& ) = delete;
    TiledUpperSPD& operator=( const TiledUpperSPD& ) = delete;

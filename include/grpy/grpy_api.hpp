@@ -1,5 +1,27 @@
-// GRPY in-process API -- a clean, self-contained module SOMO calls directly instead
-// of shelling out to the GRPY binary and scraping stdout.
+// The solver API: value structs in, results out.
+//
+// ---------------------------------------------------------------------------------------
+// PROVENANCE AND COPYRIGHT
+//
+//   GRPY -- Copyright (C) 2017 Pawel Jan Zuk
+//   "This library is free software; you can redistribute it and/or modify it under the
+//    terms of the GNU General Public License version 3" (GRPY.f header)
+//
+//   C++ port and extensions -- Copyright (C) 2026 the UltraScan project
+//
+// MODIFIED FROM GRPY.f IN 2026 (GPLv3 section 5a):
+//   * the API, the option handling and the progress reporting are new work;
+//   * read_native_file() and derive_scalars() are translated from GRPY.f -- its input
+//     reader and its display formulas -- with every field now checked, where the original
+//     read unchecked and turned a truncated file into zeros.
+//
+// Copyright in the original work remains with its author; copyright in the new material
+// is the UltraScan project's. The combined work is GPLv3, as a derivative work must be.
+//
+// Cite: Zuk, P. J., Cichocki, B. and Szymczak, P., "GRPY: an accurate bead method for
+// calculation of hydrodynamic properties of rigid biomacromolecules", Biophys. J.
+// 115:782-800 (2018).
+// ---------------------------------------------------------------------------------------
 //
 // Design (deliberately NOT bolted onto a god class):
 //   * one namespace `grpy`, a small `Solver` class with dependency-injected threading
