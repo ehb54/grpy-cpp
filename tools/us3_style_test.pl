@@ -91,6 +91,18 @@ ok( "formatting is idempotent",                        formatted( formatted( $un
                                                        formatted( $unbraced ) );
 
 # A trailing comment must not swallow the brace.
+# A braced initializer list in the BODY is not a body brace. Testing the whole line for '{'
+# exempted these, and they read as clean -- two such lines reached a merge before this.
+my $initlist = "void f()\n{\n   for ( int i : v ) out.push_back( {a[ i ], b[ i ]} );\n}\n";
+ok( "a braced init list in the body is not a body brace", check_count( $initlist ), 1 );
+ok( "the formatter braces it",
+    ( formatted( $initlist ) =~ /for \( int i : v \) \{/ ? 1 : 0 ), 1 );
+ok( "--check reaches zero after formatting it", check_count( formatted( $initlist ) ), 0 );
+
+# A brace that really does open the body, on the same line, is still exempt.
+my $samebrace = "void f()\n{\n   if ( a ) { b(); }\n}\n";
+ok( "a real same-line body brace is still exempt", check_count( $samebrace ), 0 );
+
 my $cmt = "void f()\n{\n   if ( a ) b();   // note\n}\n";
 ok( "a braced body keeps its trailing comment outside", ( formatted( $cmt ) =~ /\{\s+\/\/ note/ ? 1 : 0 ), 1 );
 

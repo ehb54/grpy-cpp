@@ -270,7 +270,9 @@ struct TiledUpperSPD {
          // trailing update: A(i,j) -= U(k,i)^T U(k,j) for k<i<=j  (independent per (i,j))
          std::vector<std::pair<int,int>> jobs;
          for ( int j = k + 1; j < nt; ++j ) {
-            for ( int i = k + 1; i <= j; ++i ) jobs.push_back( {i, j} );
+            for ( int i = k + 1; i <= j; ++i ) {
+               jobs.push_back( {i, j} );
+            }
          }
 
          const int njobs = (int) jobs.size();
