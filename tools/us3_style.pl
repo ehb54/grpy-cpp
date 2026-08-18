@@ -13,6 +13,12 @@
 #      and takes a space after it -- SOMO writes (QString) "red"
 #   6. braces around a single-statement if / for / while body
 #
+# Known limitation of rule 6: a body that is ITSELF a control statement, as in
+#   if ( r ) for ( int k : v ) ...
+# is not reported or rewritten. Bracing it means finding the end of the nested statement,
+# which the inline scan below does not do, and reporting what the formatter cannot fix would
+# put --check and the formatter back out of step.
+#
 # String literals, character literals, comments and preprocessor lines are never
 # rewritten: every match is found on a masked copy of the line, where those regions
 # are blanked out, and applied to the real line by position.
@@ -271,11 +277,15 @@ sub braceless {
    my ( $line, $next ) = @_;
    my $masked = mask( $line );
    return ( "", 0 ) if $masked !~ /^\s*(if|for|while)\s*\(/;
-   return ( "", 0 ) if $masked =~ /\{/;            # already opens a body
    my $open  = index( $masked, "(" );
    my $close = match_paren( $masked, $open );
    return ( "", 0 ) if $close < 0;                 # multi-line condition
    my $rest = substr( $masked, $close + 1 );
+   # A body brace is one that FOLLOWS the condition. Testing the whole line for '{' instead
+   # -- as this did -- silently exempts an unbraced body whose own argument is a braced
+   # initializer list, e.g.  for ( i : v ) out.push_back( {a, b, c} );  which is unbraced and
+   # was reported clean.
+   return ( "", 0 ) if $rest =~ /^\s*\{/;         # already opens a body
    if ( $rest !~ /\S/ ) {
       return ( "", 0 ) if defined $next && mask( $next ) =~ /^\s*\{/;   # brace on its own line
       return ( "next", $close );
