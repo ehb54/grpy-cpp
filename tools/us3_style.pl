@@ -261,8 +261,14 @@ sub reindent {
 # ---------------------------------------------------------------------------------------
 # Rule 6. Returns ( kind, condition_end ) where kind is "inline", "next" or "" .
 # ---------------------------------------------------------------------------------------
+# $next, when given, is the line that follows. It is what distinguishes a body that is
+# genuinely unbraced from one written in the brace-on-its-own-line style: both leave the
+# construct line ending at ')'. add_braces() has always made that distinction before
+# rewriting; --check did not, and so reported violations the formatter would never fix --
+# on a file written in that style --check could not reach zero however often it was run.
+# Both callers now pass $next, so the two paths cannot disagree again.
 sub braceless {
-   my ( $line ) = @_;
+   my ( $line, $next ) = @_;
    my $masked = mask( $line );
    return ( "", 0 ) if $masked !~ /^\s*(if|for|while)\s*\(/;
    return ( "", 0 ) if $masked =~ /\{/;            # already opens a body
@@ -270,7 +276,10 @@ sub braceless {
    my $close = match_paren( $masked, $open );
    return ( "", 0 ) if $close < 0;                 # multi-line condition
    my $rest = substr( $masked, $close + 1 );
-   return ( "next",   $close ) if $rest !~ /\S/;
+   if ( $rest !~ /\S/ ) {
+      return ( "", 0 ) if defined $next && mask( $next ) =~ /^\s*\{/;   # brace on its own line
+      return ( "next", $close );
+   }
    return ( "inline", $close ) if $rest =~ /;\s*$/ && $rest !~ /^\s*\)/;
    return ( "", 0 );
 }
@@ -281,7 +290,7 @@ sub add_braces {
    my $i = 0;
    while ( $i < @$lines ) {
       my $line = $lines->[ $i ];
-      my ( $kind, $close ) = braceless( $line );
+      my ( $kind, $close ) = braceless( $line, $lines->[ $i + 1 ] );
       my ( $indent ) = $line =~ /^( *)/;
 
       if ( $kind eq "inline" ) {
@@ -386,7 +395,7 @@ sub check_file {
             $bad++;
          }
       }
-      my ( $kind ) = braceless( $line );
+      my ( $kind ) = braceless( $line, $lines->[ $n + 1 ] );
       if ( $kind ) {
          print "$path:@{[ $n + 1 ]}: unbraced body\n";
          $bad++;
