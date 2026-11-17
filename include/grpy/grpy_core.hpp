@@ -18,7 +18,9 @@
 //   * optional single-precision storage and factorization, halving the memory;
 //   * optional out-of-core storage, bounding resident memory independently of model size;
 //   * PI, KB and NA corrected to double precision (they were single, capping the whole
-//     calculation at about seven digits).
+//     calculation at about seven digits);
+//   * intrinsic_fixed added: the fixed-body intrinsic viscosity about the viscosity
+//     centre, for comparison with boundary-element results.
 //
 // Copyright in the original work remains with its author; copyright in the new material
 // is the UltraScan project's. The combined work is GPLv3, as a derivative work must be.
@@ -583,6 +585,38 @@ inline double intrinsic_high( const Eigen::Matrix<double,11,11>& AR ){
    ADD = ADD - ATD.transpose()*ATT*ATD;
    double mdd=0; for ( int i=0;i<5;i++ ) mdd+=ADD( i,i );
    return mdd/10.0;
+}
+// Fixed-body intrinsic viscosity (an extension, not in GRPY.f): the body held still
+// (U = Omega = 0) in the five pure strain flows, orientation-averaged, with the flows
+// centred at the viscosity centre -- the point that minimises that average. This is the
+// quantity boundary-element codes report (Allison, Macromolecules 31:4464 (1998); BEST's
+// CHI, visco.f) and HYDRO's viscosity-centre [eta], so a bead model can be compared with
+// them on equal terms. It is not eta_0. It is never below it in the cases tested
+// (tests/test_eta_zeta.cpp), and it equals it for lines, rings and regular polyhedra of
+// touching beads. A tetrahedron is +0.35% and protein bead models +0.01..+0.23%. For a
+// centrosymmetric body the translational part of the difference vanishes, but the
+// rotational part need not (+0.07% for a random centrosymmetric cluster).
+//
+// Moving the flow centre from the AR reference point by d adds the uniform flow -Y_k d to
+// strain k, so the strain block becomes
+//    tr ADD(d) = tr ADD - 2 d.g + d.Q d,   g = sum_k Y_k ATD_k,   Q = sum_k Y_k ATT_tt Y_k
+// (ATT_tt the translational 3x3 of AR, ATD_k its strain column k, Y_k symmetric). Q is
+// SPD, so the minimum is at d = Q^-1 g, where tr ADD(d) = tr ADD - g.d. Returns that over
+// 10 -- the normalisation of intrinsic_high, so the two share the report's scaling -- and
+// d, the viscosity centre relative to the reference point of AR.
+inline double intrinsic_fixed( const Eigen::Matrix<double,11,11>& AR, Vector3d& d ){
+   const Matrix3d A = AR.topLeftCorner<3,3>();
+   Matrix3d Q = Matrix3d::Zero();
+   Vector3d g = Vector3d::Zero();
+   double trdd = 0;
+   for ( int k=0;k<5;k++ ) {
+      const Matrix3d& Y = Y2()[ k ];
+      Q += Y*A*Y;
+      g += Y*AR.block<3,1>( 0,6+k );
+      trdd += AR( 6+k,6+k );
+   }
+   d = Q.ldlt().solve( g );
+   return ( trdd - g.dot( d ) )/10.0;
 }
 inline double brown_ew( const Eigen::Matrix<double,11,11>& AR ){
    // Y2m basis with m=-2..2 mapped to index 0..4 (same 5 matrices as Y2()).

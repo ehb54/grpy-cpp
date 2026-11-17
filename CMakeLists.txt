@@ -50,3 +50,10 @@ install( DIRECTORY include/grpy DESTINATION include )
 enable_testing()
 add_test( NAME goldens
           COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/run.sh $<TARGET_FILE:grpy> )
+
+# The fixed-body intrinsic viscosity (GRPY_ETA_ZETA) has no Fortran golden; this checks it
+# against a direct evaluation instead.
+add_executable( test_eta_zeta tests/test_eta_zeta.cpp )
+target_include_directories( test_eta_zeta PRIVATE include/grpy "${GRPY_EIGEN_INCLUDE}" )
+target_compile_options( test_eta_zeta PRIVATE $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O2> )
+add_test( NAME eta_zeta COMMAND test_eta_zeta )
