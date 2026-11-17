@@ -63,6 +63,7 @@ struct Options {
    bool   single = false;         // float storage/factor for very large systems
    int    tile   = 256;
    std::string ooc_dir;           // "" = in-core; else spill tiled matrix here (disk)
+   bool   eta_zeta = false;       // also report the fixed-body eta about the viscosity centre
 };
 
 // Structured results (SI/GRPY display units). The SOMO adapter maps these to
@@ -74,6 +75,8 @@ struct Results {
    double translational_diffusion_centre = 0;  // Dt at mobility centre [cm^2/s]
    double intrinsic_viscosity_high = 0;  // eta_oo    [cm^3/g]
    double intrinsic_viscosity_zero = 0;  // eta_0     [cm^3/g]
+   double intrinsic_viscosity_fixed = 0; // eta_zeta, body fixed, viscosity centre [cm^3/g]
+   double viscosity_centre[ 3 ] = {0,0,0}; // where eta_zeta is minimal [cm]
    double tau_vector[ 3 ] = {0,0,0};       // relaxation times, vector        [s]
    double tau_tensor[ 5 ] = {0,0,0,0,0};   // relaxation times, tensor        [s]
    double tau_harmonic = 0;              // harmonic mean tau               [s]
@@ -177,6 +180,10 @@ inline void derive_scalars( const ReportData& d, Results& r ) {
    r.sedimentation = d.MW*( 1.0-( d.VBAR*d.RHO ) )*1.0e+13/NA * tr3( d.ATRCH )/( U*PI*ETA );
    r.intrinsic_viscosity_high = d.MDD*PI*NA/d.MW*std::pow( U,3 );
    r.intrinsic_viscosity_zero = ( d.MDD+d.BR )*PI*NA/d.MW*std::pow( U,3 );
+   r.intrinsic_viscosity_fixed = d.MDZ*PI*NA/d.MW*std::pow( U,3 );
+   for ( int i=0;i<3;++i ) {
+      r.viscosity_centre[ i ] = d.VC[ i+1 ]*U;
+   }
    r.translational_diffusion        = tr3( d.ATR )  *KB*TK/( U*PI*ETA );
    r.translational_diffusion_centre = tr3( d.ATRCH )*KB*TK/( U*PI*ETA );
    r.stokes_radius_Dt = U/tr3( d.ATRCH )/6.0;
@@ -240,6 +247,12 @@ public:
          : core::hydro_tiled<double>( b, N, RR, par_, progress, opt_.tile, oocfile );
       d.MDD = core::intrinsic_high( AR );
       d.BR  = core::brown_ew( AR );
+      Eigen::Vector3d VC;
+      d.MDZ = core::intrinsic_fixed( AR, VC );       // cheap: a 3x3 solve on AR
+      d.ETAZ = opt_.eta_zeta;
+      for ( int i=0;i<3;++i ) {
+         d.VC[ i+1 ] = VC( i );                       // RR = 0, so already absolute
+      }
       Eigen::Matrix<double,6,6> ATR = core::spd_inverse( AR.topLeftCorner( 6,6 ) );
       Eigen::Vector3d RCH = core::calcrch( ATR );
       Eigen::Matrix<double,6,6> ATRCH; Eigen::Matrix3d EIV; Eigen::Vector3d DRR;

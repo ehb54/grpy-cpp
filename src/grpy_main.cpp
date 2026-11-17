@@ -40,6 +40,8 @@
 //   GRPY_SINGLE=1        single-precision storage and factorization (half the memory)
 //   GRPY_OOC=<dir>       spill the tiled matrix to <dir> so RAM stays bounded
 //   GRPY_HP=1            report in extended precision (ES24.15E3), for validation
+//   GRPY_ETA_ZETA=1      also report the fixed-body [eta] about the viscosity centre (the
+//                        quantity boundary-element codes give), after eta 0
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
@@ -59,6 +61,7 @@ namespace {
 grpy::Options options_from_environment() {
    grpy::Options opt;
    opt.single = std::getenv( "GRPY_SINGLE" ) != nullptr;
+   opt.eta_zeta = std::getenv( "GRPY_ETA_ZETA" ) != nullptr;
    const char* ooc = std::getenv( "GRPY_OOC" );
    if ( ooc == nullptr ) {
       ooc = std::getenv( "GRPY_OOC_DIR" );         // the name SOMO uses

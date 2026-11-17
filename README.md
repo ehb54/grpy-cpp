@@ -16,8 +16,10 @@ Eigen (header-only) is the only dependency.
 ```bash
 cmake -B build -DEIGEN_INCLUDE_DIR=/path/to/eigen
 cmake --build build -j
-./tests/run.sh build/grpy
+ctest --test-dir build
 ```
+
+`ctest` runs both tests: `tests/run.sh build/grpy` (the goldens) and `build/test_eta_zeta`.
 
 `EIGEN_INCLUDE_DIR` is the directory holding `Eigen/Dense`; UltraScan vendors a copy at
 `us_somo/develop/include`. Without it, CMake looks for a system Eigen3.
@@ -40,9 +42,34 @@ environment variable:
 | `GRPY_SINGLE=1` | single-precision storage and factorization — half the memory, ~2× faster, same result to the reported precision |
 | `GRPY_OOC=<dir>` | spill the tiled matrix to disk, so RAM stays bounded |
 | `GRPY_HP=1` | report in extended precision (ES24.15E3), for validation |
+| `GRPY_ETA_ZETA=1` | also report the fixed-body intrinsic viscosity [η]ζ and the viscosity centre (below) |
 
 Memory is the binding constraint: peak RSS ≈ (11N)²/2 × scalar size, so 32 GB reaches
 about 6800 beads in double precision and 9600 in single.
+
+## The fixed-body intrinsic viscosity, [η]ζ
+
+With `GRPY_ETA_ZETA=1` the report gains one line after `eta 0`, followed by the viscosity
+centre. The line is `Fixed-body intrinsic viscosity eta zeta`, which is [η]ζ(Rη) of Żuk et
+al. (2018), eq. 29. It is the orientation-averaged stresslet of the body held still in the
+five pure strain flows, centred at the viscosity centre Rη, the point that minimises that
+average.
+
+Boundary-element programs report this quantity in place of [η]0, for example BEST, after
+Allison (1998). It lets a bead model be compared with them like for like. It costs one
+3×3 solve on the rigid-body resistance matrix the program already forms. Without the
+variable, the report is unchanged.
+
+[η]ζ is not [η]0, although the two are close:
+
+- They are equal for lines, rings and regular polyhedra of touching beads.
+- [η]ζ is 0.19% higher for a three-bead ring and 0.35% higher for a tetrahedron.
+- For protein bead models it is 0.004–0.28% higher, typically about 0.05%.
+- For unequal dimers the program reproduces Fig. 1 of Żuk et al. (2018).
+
+Centrosymmetry removes the translational part of the difference but not the rotational
+part, so a centrosymmetric body need not give [η]ζ = [η]0. `tests/test_eta_zeta.cpp`
+checks the closed form against a direct evaluation about the centre it returns.
 
 ## Two documented differences from the Fortran
 
@@ -87,7 +114,9 @@ Substantially more than a transcription:
 - errors **reported** — by field and line for input, with a non-zero exit for failures —
   where the original aborted or computed on zeros;
 - `PI`, `KB` and `NA` corrected to double precision; they were single, which capped the
-  whole calculation at about seven digits.
+  whole calculation at about seven digits;
+- the fixed-body intrinsic viscosity [η]ζ about the viscosity centre, as an option, for
+  comparison with boundary-element results (above).
 
 Measured, on the same inputs and the same machine:
 

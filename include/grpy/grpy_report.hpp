@@ -44,6 +44,8 @@ struct ReportData {
    double RR[ 4 ]{}, RCH[ 4 ]{};
    double TAU[ 9 ]{};       // TAU(1..8)
    double DTAU = 0, MDD = 0, BR = 0, RG2 = 0;
+   bool   ETAZ = false;      // report the fixed-body eta (GRPY_ETA_ZETA); off = original report
+   double MDZ = 0, VC[ 4 ]{}; // fixed-body eta (as MDD) and the viscosity centre (1-based)
    double UNITS = 1, ETA = 0.01, TK = 293.15, VBAR = 0, RHO = 1, MW = 0;
    std::string inputtype;
 };
@@ -123,6 +125,12 @@ inline void write_report( std::ostream& o, const ReportData& d ) {
    blank( o );
    f100( o, "High frequency intrinsic viscosity eta oo:", d.MDD*PI*NA/d.MW*std::pow( U,3 ), "[cm^3/g]" "  " );
    f100( o, "Zero frequency intrinsic viscosity eta 0:", ( d.MDD+d.BR )*PI*NA/d.MW*std::pow( U,3 ), "[cm^3/g]" "  " );
+   if ( d.ETAZ ) {
+      f100( o, "Fixed-body intrinsic viscosity eta zeta:", d.MDZ*PI*NA/d.MW*std::pow( U,3 ), "[cm^3/g]" "  " );
+      f102( o, " about the viscosity centre:", "" );
+      f106( o, "x [cm]", "y [cm]", "z [cm]" );
+      f105( o, d.VC[ 1 ]*U, d.VC[ 2 ]*U, d.VC[ 3 ]*U );
+   }
    blank( o );
    f102( o, " calculated using the origin", "" ); f102( o, " of the coordinate system:", "" );
    f105( o, 0.0, 0.0, 0.0 );
